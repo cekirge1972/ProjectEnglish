@@ -1,14 +1,17 @@
 # ProjectEnglish
+A small Python project to help with English practice and reporting. Provides CLI/TUI helpers, data files for words/pronunciations, and scripts to generate reports (including Telegram integration).
 
 ## Future Features
-- Show if the word Noun or Verb when asking
+- Show the words type (Noun or Verb) when asking questions
 - Startup admin interface (press - on startup) UI and menu itself
 - More commmands in admin controls (pos command for selecting an key with its abs position)
+- Colorama with question asking/answering and with the stats
+- Admin Controls (on setup) will have detailed statistics and can control/manipulate stats. Admin controls will also have a way to reset statistic for test purposes
+- Telegram report tool will also include that days leaderboard for words
+- Optimization
 - POTENTIAL : Admin Console with TUI with dropback to legacy
 
 **(BELLOW THIS TEXT IS WRITTEN BY AI)**
-
-A small Python project to help with English practice and reporting. Provides CLI/TUI helpers, data files for words/pronunciations, and scripts to generate reports (including Telegram integration).
 
 **Status:** Working prototype — scripts and data provided; see usage below.
 
