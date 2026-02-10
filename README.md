@@ -1,6 +1,4 @@
 # ProjectEnglish
-Learn English
-# ProjectEnglish
 
 **(ALL OF THIS README IS WRITTEN BY AI)**
 
