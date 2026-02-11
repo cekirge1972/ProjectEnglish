@@ -1,35 +1,25 @@
-2026-02-10_20:36:20,pull,çekmek,pull,True,2
-2026-02-10_20:36:25,t-shirt,tişört,,blank,2
-2026-02-11_10:54:10,keep,tutmak,1exit,False,2
-2026-02-11_10:54:55,believe,inanmak,inanmak,True,2
-2026-02-11_10:54:59,buy,satın almak,buy,True,2
-2026-02-11_10:55:01,reach,ulaşmak,,blank,2
-2026-02-11_10:55:04,tell,anlatmak,,blank,2
-2026-02-11_10:55:05,have,sahip olmak,,blank,2
-2026-02-11_11:44:22,hope,ummak,ummak,True,2
-2026-02-11_11:44:32,fall,düşmek,düşmek,True,2
-2026-02-11_11:44:35,grow,büyümek,büyütmek,False,2
-2026-02-11_11:44:40,push,itmek,itmek,True,2
-2026-02-11_11:44:46,give,vermek,give,True,2
-2026-02-11_11:45:40,move,hareket etmek,hareket etmek,True,2
-2026-02-11_11:45:45,ask,sormak,ask,True,2
-2026-02-11_11:45:58,pasta,makarna,makarna,True,2
-2026-02-11_11:52:08,seem,görünmek,görünmek,True,2
-2026-02-11_11:52:14,have,sahip olmak,sahip olmak,True,2
-2026-02-11_11:52:18,bread,ekmek,ekmek,True,2
-2026-02-11_11:52:21,pineapple,ananas,,blank,2
-2026-02-11_11:54:14,sell,satmak,,,False,2
-2026-02-11_11:54:15,speak,konuşmak,,blank,2
-2026-02-11_11:54:16,wall,duvar,,,False,2
-2026-02-11_11:54:18,tell,anlatmak,,blank,2
-2026-02-11_11:54:18,do,yapmak,,blank,2
-2026-02-11_11:54:56,soda,gazoz,,blank,2
-2026-02-11_11:54:59,say,söylemek,,blank,2
-2026-02-11_11:55:00,expect,beklemek (ummak),,blank,2
-2026-02-11_11:55:01,pizza,pizza,,blank,2
-2026-02-11_11:55:02,flour,un,,blank,2
-2026-02-11_11:55:03,happen,olmak,,blank,2
-2026-02-11_11:55:04,cut,kesmek,,blank,2
-2026-02-11_11:55:04,use,kullanmak,,blank,2
-2026-02-11_11:55:05,call,aramak,,blank,2
-2026-02-11_11:55:08,use,kullanmak,,blank,2
+2026-02-11_13:30:33,soup,çorba,çorba,True,2
+2026-02-11_13:30:37,sandals,sandalet,sandals,True,2
+2026-02-11_13:30:41,hat,şapka,hat,True,2
+2026-02-11_13:30:45,boots,bot,,blank,2
+2026-02-11_13:30:46,boots,bot,,blank,2
+2026-02-11_13:30:48,pants,pantolon,,blank,2
+2026-02-11_13:30:49,work,çalışmak,,blank,2
+2026-02-11_13:30:50,continue,devam etmek,,blank,2
+2026-02-11_13:30:51,hat,şapka,,blank,2
+2026-02-11_13:30:51,hold,tutmak,,blank,2
+2026-02-11_13:30:52,stay,kalmak,,blank,2
+2026-02-11_13:30:53,shirt,gömlek,,blank,2
+2026-02-11_13:30:55,send,göndermek,,blank,2
+2026-02-11_13:30:56,turn,dönmek,,blank,2
+2026-02-11_13:30:56,take,almak,,blank,2
+2026-02-11_13:30:57,include,dahil etmek,,blank,2
+2026-02-11_13:30:58,grow,büyümek,,blank,2
+2026-02-11_13:30:59,follow,takip etmek,,blank,2
+2026-02-11_13:31:00,flour,un,,blank,2
+2026-02-11_13:31:01,happen,olmak,yaşanmak,False,2
+2026-02-11_13:31:30,fall,düşmek,,blank,2
+2026-02-11_13:31:32,sandals,sandalet,sandals,True,2
+2026-02-11_13:31:35,explain,açıklamak,describe,False,2
+2026-02-11_13:31:40,put,koymak,,blank,2
+2026-02-11_13:31:42,look,bakmak,,blank,2

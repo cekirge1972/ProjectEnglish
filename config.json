@@ -1,7 +1,7 @@
 {
     "default_quiz_config": {
         "level_1_question_count": 20,
-        "level_2_question_count": 10,
+        "level_2_question_count": 25,
         "random_order": true,
         "pronounce_words": true,
         "send_telegram_message": true,

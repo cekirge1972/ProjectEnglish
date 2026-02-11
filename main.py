@@ -14,6 +14,8 @@ import wave
 from pydub import AudioSegment
 import sys
 import copy
+from colorama import Fore, Back, Style, init
+init(autoreset=True)
 
 def lg(a="",b="",c="",d="",e="",f="",g="",h="",i="",j="",k="",l="",m="",n="",o="",p="",q="",r="",s="",t="",u="",v="",w="",x="",y="",z=""):
     global DEBUG
@@ -134,7 +136,7 @@ def load_words(file_path):
     return final_words, f_words
 
 
-def get_audio(word,lang_="en"):
+def get_audio(word,lang_="en",t=1):
     lg(f"get_audio({word},{lang_})")
     words,typer = load_words('words.csv')
     for word_ in words:
@@ -155,9 +157,18 @@ def get_audio(word,lang_="en"):
         tts = gTTS(text=word, lang=language)
         filename = f"pronunciations/{word.lower()}.mp3"
         tts.save(filename)
-        
-        lg(f"Pronunciation audio saved as {filename}")
-        return filename
+        if os.path.exists(filename):
+            file_size = os.path.getsize(filename)
+            if file_size == 0:
+                if t != 3:
+                    lg(f"Hata: {filename} boş (0 byte) oluşturuldu. Siliniyor...")
+                    os.remove(filename)
+                    get_audio(word,lang_,t+1)
+                else:
+                    lg(f"Hata: {filename} 3 defa indirildi ama başarısız olundu.")
+            else:
+                lg(f"Pronunciation audio saved as {filename}")
+                return filename
     else:
         lg(f"Language mismatch: word is in {language}, but lang_ is {lang_}. No audio generated.")
         return None
@@ -252,6 +263,75 @@ def save_stat(time_,word,translation,answer,correct,level):
         file.write(stat_line)
         file.close()
 
+def quest(question_amount,wordlist,word_progression,dd,typer,quiz_config):
+    unknown_words = wordlist
+    for i in range(question_amount):
+        cls()
+        word = random.choice(unknown_words)
+        time_ = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        type_of_word = next((d[word][1] for d in typer if word in d), "Not found")
+        if random.randint(1,2) == 1:
+            if word in word_progression:
+                basari = word_progression[word][2]*100
+                if basari >= 80: cc = Fore.GREEN
+                elif basari >= 50: cc = Fore.YELLOW
+                elif basari > 20: cc = Fore.LIGHTRED_EX
+                else: cc = Fore.RED
+            try:
+                if word in word_progression:
+                    basari = int(basari)
+                    print(f"{word} kelimesi için başarı oranınız: ",end="")
+                    print(f"{cc}%{basari:.2f}{Style.RESET_ALL}",end="")
+                    print(f" ({word_progression[word][0]}/{word_progression[word][1]})\n")      
+                else: print(f"{word} kelimesi ilk kez soruluyor.\n")
+            except Exception as e: 
+                if word in word_progression:
+                    print(f"Hata : {e}")
+            answer = input(f"{i+1}. '{word}' ({type_of_word}) kelimesinin Türkçe karşılığı nedir? ")
+            if answer.lower() == dd[word].lower():
+                print(Fore.GREEN+"\nDoğru!"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],answer,True,2)
+            elif answer == "":
+                print(Fore.LIGHTRED_EX+f"Boş bırakıldı! Doğru cevap: {word}"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],answer,"blank",2)
+
+            elif answer.lower() == "exit":
+                os._exit(1)
+            else:
+                print(Fore.RED+f"Yanlış! Doğru cevap: {dd[word]}"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],answer,False,2)
+        else:
+            if word in word_progression:
+                basari = word_progression[word][2]*100
+                if basari >= 80: cc = Fore.GREEN
+                elif basari >= 50: cc = Fore.YELLOW
+                elif basari > 20: cc = Fore.LIGHTRED_EX
+                else: cc = Fore.RED
+            try:
+                if word in word_progression:
+                    basari = int(basari)
+                    print(f"{dd[word]} kelimesi için başarı oranınız: ",end="")
+                    print(f"{cc}%{basari:.2f}{Style.RESET_ALL}",end="")
+                    print(f" ({word_progression[word][0]}/{word_progression[word][1]})\n")      
+                else: print(f"{dd[word]} kelimesi ilk kez soruluyor.\n")
+            except Exception as e: 
+                if word in word_progression:
+                    print(f"Hata : {e}")
+            answer = input(f"{i+1}. '{dd[word]}' ({type_of_word}) kelimesinin İngilizce karşılığı nedir? ")
+            if answer.lower() == word.lower():
+                print(Fore.GREEN+"\nDoğru!"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],answer,True,2)
+            elif answer == "":
+                print(Fore.LIGHTRED_EX+f"Boş bırakıldı! Doğru cevap: {word}"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],"","blank",2)
+            elif answer.lower() == "exit":
+                os._exit(1)
+            else:
+                print(Fore.RED+f"Yanlış! Doğru cevap: {word}"+Style.RESET_ALL)
+                save_stat(time_,word,dd[word],answer,False,2)    
+        if quiz_config.get("pronounce_words") == True:
+            pronounce_word(word)
+
 def main(quiz_config={}, legacy_start_menu=False):
     global LEVEL_1_PASSED,LEVEL_2_PASSED, DEBUG
     lg("main()")
@@ -260,7 +340,7 @@ def main(quiz_config={}, legacy_start_menu=False):
         print("InQ'ya hoş geldiniz!\n")
         try:
             if sys.argv[1] == "-debug":
-                from colorama import Fore, Back, Style
+                
                 print(Fore.RED + "DEBUG MODU AKTİF" + Style.RESET_ALL + "\n")
         
         except:pass
@@ -455,44 +535,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                 else:
                     question_amount = quiz_config["level_1_question_count"]
                 lg(known_words)
-                for i in range(question_amount):
-                    word = random.choice(known_words)
-                    type_of_word = next((d[word][1] for d in typer if word in d), "Not found")
-                    time_ = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-                    if random.randint(1,2) == 1:
-                        if word in word_progression:
-                            stat_ = (f"{word} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
-                        print(stat_) if word in word_progression else print(f"{word} kelimesi ilk kez soruluyor.")    
-                        answer = input(f"{i+1}. '{word}' ({type_of_word}) kelimesinin Türkçe karşılığı nedir? ")
-                        if answer.lower() == dd[word].lower():
-                            print("Doğru!")
-                            save_stat(time_,word,dd[word],answer,True,1)
-                        elif answer == "":
-                            print(f"Boş bırakıldı! Doğru cevap: {word}")
-                            save_stat(time_,word,dd[word],answer,"blank",1)
-                        elif answer.lower() == "exit":
-                            os._exit(1)
-                        else:
-                            print(f"Yanlış! Doğru cevap: {dd[word]}")
-                            save_stat(time_,word,dd[word],answer,False,1)
-                    else:
-                        if word in word_progression:
-                            stat_ = (f"{dd.get(word)} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
-                        print(stat_) if word in word_progression else print(f"{dd.get(word)} kelimesi ilk kez soruluyor.")    
-                        answer = input(f"{i+1}. '{dd[word]}' ({type_of_word}) kelimesinin İngilizce karşılığı nedir? ")
-                        if answer.lower() == word.lower():
-                            print("Doğru!")
-                            save_stat(time_,word,dd[word],answer,True,1)
-                        elif answer == "":
-                            print(f"Boş bırakıldı! Doğru cevap: {word}")
-                            save_stat(time_,word,dd[word],answer,"blank",1)
-                        elif answer.lower() == "exit":
-                            os._exit(1)
-                        else:
-                            print(f"Yanlış! Doğru cevap: {word}")
-                            save_stat(time_,word,dd[word],answer,False,1)      
-                    if quiz_config.get("pronounce_words") == True:
-                        pronounce_word(word)
+                quest(question_amount=question_amount,wordlist=known_words,word_progression=word_progression,dd=dd,typer=typer,quiz_config=quiz_config)
                 analytics("set",datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"),start_time,"level_1_passed")
                 with open("statistics.csv", "r", encoding="UTF-8") as f:
                     correct_counter_ = wrong_counter_ = blank_counter_ = total_counter_ = 0
@@ -604,46 +647,8 @@ def main(quiz_config={}, legacy_start_menu=False):
                         question_amount = quiz_config["level_2_question_count"]
 
                     lg(unknown_words)
-                    for i in range(question_amount):
-                        word = random.choice(unknown_words)
-                        time_ = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-                        type_of_word = next((d[word][1] for d in typer if word in d), "Not found")
-                        if random.randint(1,2) == 1:
-                            if word in word_progression:
-                                stat_ = (f"{word} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
-                            print(stat_) if word in word_progression else print(f"{word} kelimesi ilk kez soruluyor.")    
-                            answer = input(f"{i+1}. '{word}' ({type_of_word}) kelimesinin Türkçe karşılığı nedir? ")
-                            if answer.lower() == dd[word].lower():
-                                print("Doğru!")
-                                save_stat(time_,word,dd[word],answer,True,2)
-                            elif answer == "":
-                                print(f"Boş bırakıldı! Doğru cevap: {word}")
-                                save_stat(time_,word,dd[word],answer,"blank",2)
-
-                            elif answer.lower() == "exit":
-                                os._exit(1)
-                            else:
-                                print(f"Yanlış! Doğru cevap: {dd[word]}")
-                                save_stat(time_,word,dd[word],answer,False,2)
-                        else:
-                            if word in word_progression:
-                                stat_ = (f"{dd.get(word)} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
-                            print(stat_) if word in word_progression else print(f"{dd.get(word)} kelimesi ilk kez soruluyor.")    
-                            answer = input(f"{i+1}. '{dd[word]}' ({type_of_word}) kelimesinin İngilizce karşılığı nedir? ")
-                            if answer.lower() == word.lower():
-                                print("Doğru!")
-                                save_stat(time_,word,dd[word],answer,True,2)
-                            elif answer == "":
-                                print(f"Boş bırakıldı! Doğru cevap: {word}")
-                                save_stat(time_,word,dd[word],"","blank",2)
-                            elif answer.lower() == "exit":
-                                os._exit(1)
-                            else:
-                                print(f"Yanlış! Doğru cevap: {word}")
-                                save_stat(time_,word,dd[word],answer,False,2)    
-                        if quiz_config.get("pronounce_words") == True:
-                            pronounce_word(word)
-                        LEVEL_2_PASSED = True
+                    quest(question_amount=question_amount,wordlist=unknown_words,word_progression=word_progression,dd=dd,typer=typer,quiz_config=quiz_config)
+                    LEVEL_2_PASSED = True
                     analytics("set",datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"),start_time,"level_2_passed")
                     """ daily_stat("set,") """
                     with open("statistics.csv", "r", encoding="UTF-8") as f:
@@ -698,7 +703,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                                 o_.append(int(m_[0].split(",")[i]))
                         lg(o_)
                         print("Sending Report.")
-                        if o_[0] == 0: puan = 0
+                        if o_[0] == 0: puan = 0; net=0
                         else:
                             net = o_[0]+(-o_[1]-o_[2])*.25
                             if o_[3] != 0:
