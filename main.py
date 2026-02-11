@@ -119,22 +119,24 @@ def daily_stat(get_set, correct, wrong, blank, total,level):
 # words.csv --> comma seperate values
 
 def load_words(file_path):
-    lg(f"load_words({file_path})")
     final_words = []
+    f_words = []
     with open(file_path, 'r', encoding="UTF-8") as file:
-        words = [line.strip() for line in file.readlines()]
-        for word in words:
-            word_dict = {}
-            word_dict[word.split(',')[0]] = word.split(',')[1]
-            final_words.append(word_dict)
+        for line in file:
+            # Strip the whole line, then split, then strip each part
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) < 3: continue 
             
-    """ print(final_words) """
-    return final_words
+            eng, tr, w_type = parts[0], parts[1], parts[2]
+            
+            final_words.append({eng: tr})
+            f_words.append({eng: [tr, w_type]})
+    return final_words, f_words
 
 
 def get_audio(word,lang_="en"):
     lg(f"get_audio({word},{lang_})")
-    words = load_words('words.csv')
+    words,typer = load_words('words.csv')
     for word_ in words:
         key = next(iter(word_.keys()))
         lg(key, word)
@@ -209,7 +211,7 @@ def pronounce_word(word, lang_="en"):
 
 def detect_language(text):
     lg(f"detect_language({text})")
-    words = load_words('words.csv')
+    words,typer = load_words('words.csv')
     for word in words:
         key = next(iter(word.keys()))
         val = next(iter(word.values()))
@@ -357,6 +359,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                                     elif value.isdigit():
                                         value = int(value)
                                     default_config[0][key] = value
+                                    temp_config[0][key] = value
                                     set_config("default_quiz_config", key, value)
                                     print(f"{key} başarıyla {value} olarak güncellendi.")
                                 else:
@@ -442,7 +445,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                             word_progression[word] = [correct_counter,amount_counter,correct_counter / amount_counter if amount_counter > 0 else 0]
                     f.close()
 
-                all_words = load_words("words.csv")
+                all_words,typer = load_words("words.csv")
                 start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
                 dd = {}
                 for word_dict in all_words:
@@ -454,12 +457,13 @@ def main(quiz_config={}, legacy_start_menu=False):
                 lg(known_words)
                 for i in range(question_amount):
                     word = random.choice(known_words)
+                    type_of_word = next((d[word][1] for d in typer if word in d), "Not found")
                     time_ = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
                     if random.randint(1,2) == 1:
                         if word in word_progression:
                             stat_ = (f"{word} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
                         print(stat_) if word in word_progression else print(f"{word} kelimesi ilk kez soruluyor.")    
-                        answer = input(f"{i+1}. '{word}' kelimesinin Türkçe karşılığı nedir? ")
+                        answer = input(f"{i+1}. '{word}' ({type_of_word}) kelimesinin Türkçe karşılığı nedir? ")
                         if answer.lower() == dd[word].lower():
                             print("Doğru!")
                             save_stat(time_,word,dd[word],answer,True,1)
@@ -475,7 +479,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                         if word in word_progression:
                             stat_ = (f"{dd.get(word)} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
                         print(stat_) if word in word_progression else print(f"{dd.get(word)} kelimesi ilk kez soruluyor.")    
-                        answer = input(f"{i+1}. '{dd[word]}' kelimesinin İngilizce karşılığı nedir? ")
+                        answer = input(f"{i+1}. '{dd[word]}' ({type_of_word}) kelimesinin İngilizce karşılığı nedir? ")
                         if answer.lower() == word.lower():
                             print("Doğru!")
                             save_stat(time_,word,dd[word],answer,True,1)
@@ -586,7 +590,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                                 word_progression[word] = [correct_counter,amount_counter,correct_counter / amount_counter if amount_counter > 0 else 0]
                         f.close()
                     start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-                    all_words = load_words("words.csv")
+                    all_words,typer = load_words("words.csv")
                     for word in all_words:
                         if list(word.keys())[0] not in stat_words:
                             if list(word.keys())[0] not in unknown_words:
@@ -603,11 +607,12 @@ def main(quiz_config={}, legacy_start_menu=False):
                     for i in range(question_amount):
                         word = random.choice(unknown_words)
                         time_ = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+                        type_of_word = next((d[word][1] for d in typer if word in d), "Not found")
                         if random.randint(1,2) == 1:
                             if word in word_progression:
                                 stat_ = (f"{word} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
                             print(stat_) if word in word_progression else print(f"{word} kelimesi ilk kez soruluyor.")    
-                            answer = input(f"{i+1}. '{word}' kelimesinin Türkçe karşılığı nedir? ")
+                            answer = input(f"{i+1}. '{word}' ({type_of_word}) kelimesinin Türkçe karşılığı nedir? ")
                             if answer.lower() == dd[word].lower():
                                 print("Doğru!")
                                 save_stat(time_,word,dd[word],answer,True,2)
@@ -624,7 +629,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                             if word in word_progression:
                                 stat_ = (f"{dd.get(word)} kelimesi için başarı oranınız: %{word_progression[word][2]*100:.2f} ({word_progression[word][0]}/{word_progression[word][1]})")
                             print(stat_) if word in word_progression else print(f"{dd.get(word)} kelimesi ilk kez soruluyor.")    
-                            answer = input(f"{i+1}. '{dd[word]}' kelimesinin İngilizce karşılığı nedir? ")
+                            answer = input(f"{i+1}. '{dd[word]}' ({type_of_word}) kelimesinin İngilizce karşılığı nedir? ")
                             if answer.lower() == word.lower():
                                 print("Doğru!")
                                 save_stat(time_,word,dd[word],answer,True,2)
@@ -651,7 +656,7 @@ def main(quiz_config={}, legacy_start_menu=False):
                                     todays.append(line.strip())
                         time.sleep(.3)
                         for line in todays:
-                            print(line.split(","))
+                            lg(line.split(","))
                             if line.split(",")[5] == "2":
                                 """ print(line)
                                 print(line.split(","))
@@ -661,10 +666,10 @@ def main(quiz_config={}, legacy_start_menu=False):
                                 if line.split(",")[4] == "True":
                                     
                                     correct_counter__ += 1
-                                    print(+1)
+                                    lg(+1)
                                 elif line.split(",")[4] == "False":
                                     wrong_counter__ += 1
-                                    print(-1)
+                                    lg(-1)
                                 else: blank_counter__ += 1
                                 total_counter__ += 1
                         f.close()
