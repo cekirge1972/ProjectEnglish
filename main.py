@@ -833,14 +833,14 @@ def main(quiz_config={}, legacy_start_menu=False,mode="play"):
                         for key, a in list(flb.items())[-20:]:
                             lb2 = f"{lb2}{key} -> %{a[2]} ({a[0]}/{a[1]})\n"
                         
-                        telegram_text = f"📅 Günlük Analiz 📅 ({datetime.datetime.now().strftime("%Y/%m/%d")})\n\nPuan : %{puan:.2f}\nNet : {net:.2f}\n\n✅ Doğru : {o_[0]}\n❌ Yanlış : {o_[1]}\n⚪ Boş : {o_[2]}\n📝 Total Soru Sayısı : {o_[3]}\n\n🏆 Top 20 : \n\n{lb}\n📉 Worst 20 : \n\n{lb2}"
+                        telegram_text = f"📅 Günlük Analiz 📅 ({datetime.datetime.now().strftime("%d.%m.%Y")})\n\nPuan : %{puan:.2f}\nNet : {net:.2f}\n\n✅ Doğru : {o_[0]}\n❌ Yanlış : {o_[1]}\n⚪ Boş : {o_[2]}\n📝 Total Soru Sayısı : {o_[3]}\n\n🏆 Top 20 : \n\n{lb}\n📉 Worst 20 : \n\n{lb2}"
                         try:
                             with open("sent_tg_messages.json","r",encoding="UTF-8") as x:
                                 ddt = json.load(x)
                                 x.close()
                         except (json.JSONDecodeError, FileNotFoundError):
                             ddt = {}
-                        if datetime.datetime.now().strftime("%Y-%m-%d") not in ddt:
+                        if telegram_text not in ddt:
                             import telegram_report
                             try:
                                 telegram_report.send_telegram_report(telegram_text)
