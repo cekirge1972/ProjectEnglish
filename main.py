@@ -18,6 +18,11 @@ import copy
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
 
+if not os.path.exists(".env"):
+    with open(".env","w",encoding="UTF-8") as f:
+        f.write("ADMIN_PASSWORD=0000\nPARENTAL_CONTROL_URL=http://desktop-melih:5005")
+        f.close()
+
 def lg(a="",b="",c="",d="",e="",f="",g="",h="",i="",j="",k="",l="",m="",n="",o="",p="",q="",r="",s="",t="",u="",v="",w="",x="",y="",z=""):
     global DEBUG
     DEBUG = False
@@ -34,13 +39,13 @@ def cls():
         os.system('cls')
 
 def get_config(keys=None):
-    # Standard way to handle list arguments in Python
+    lg(f"get_config({keys})")
     if keys is None:
         keys = []
         
     config_path = "config.json"
     
-    # 1. Define the default structure
+    # 1. Default config
     default_config = {
         "default_quiz_config": {
             "level_1_question_count": 20,
@@ -57,7 +62,8 @@ def get_config(keys=None):
             "pronounce_words": True
         },
         "general": {
-            "spam_answer_proof": True
+            "spam_answer_proof": True,
+            "set_time_for_pc": True
         }
     }
 
@@ -94,7 +100,6 @@ def set_config(ukey, key, value):
         with open("config.json", "w", encoding="UTF-8") as file:
             json.dump(config, file, indent=4)
             file.close()
-
 def analytics(get_set,time_finish,time_start,type):
     lg(f"analytics({get_set},{time_finish},{time_start},{type})")
     if get_set == "set":
@@ -147,6 +152,7 @@ def daily_stat(get_set, correct, wrong, blank, total,level):
 # words.csv --> comma seperate values
 
 def load_words(file_path):
+    lg(f"load_words({file_path})")
     final_words = []
     f_words = []
     with open(file_path, 'r', encoding="UTF-8") as file:
@@ -163,7 +169,7 @@ def load_words(file_path):
 
 
 def get_audio(word,lang_="en",t=1):
-    lg(f"get_audio({word},{lang_})")
+    lg(f"get_audio({word},{lang_},{t})")
     words,typer = load_words('words.csv')
     for word_ in words:
         key = next(iter(word_.keys()))
@@ -262,7 +268,7 @@ def detect_language(text):
     main() """
 
 def admin_login_interface(just_auth=False,legacy_selection_menu=False):
-    lg(f"admin_login_interface()")
+    lg(f"admin_login_interface({just_auth},{legacy_selection_menu})")
     cls()
     import getpass
     try:
@@ -271,7 +277,7 @@ def admin_login_interface(just_auth=False,legacy_selection_menu=False):
     except Exception:
         # dotenv not available; continue and rely on environment or fallback
         pass
-
+    
     admin_password = os.getenv("ADMIN_PASSWORD")
     password = getpass.getpass("Admin Şifresini giriniz: ")
     if password == admin_password:
@@ -411,7 +417,7 @@ while loop:
 
 def main(quiz_config={}, legacy_start_menu=False,mode="play"):
     global LEVEL_1_PASSED,LEVEL_2_PASSED, DEBUG
-    lg("main()")
+    lg(f"main({quiz_config},{legacy_start_menu},{mode})")
     options = {"1": "Başla","2": "Admin Girişi"}
     if legacy_start_menu:
         print("Coalide'a hoş geldiniz!\n")
@@ -1101,70 +1107,69 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                 
             if LEVEL_0_PASSED:
                 print("Tebrikler! Dummy modunu tamamladığınız tespit edildi!")
-                if quiz_config.get("send_telegram_message"):
-                    m_ = []
-                    with open("daily_stats.csv", "r", encoding="UTF-8") as fg:
-                        liness = fg.readlines()
-                        for line in liness[::-1]:
-                            if datetime.datetime.now().strftime("%Y-%m-%d") in line:
-                                m_.append(line)
-                        fg.close()
-                    o_ = []
-                    if len(m_) == 2:
-                        for i in range(1,5):
-                            ox = 0
-                            for x in m_:
-                                ox += int(x.split(",")[i])
-                            o_.append(ox)
-                    else:
-                        for i in range(1,5):
-                            o_.append(int(m_[0].split(",")[i]))
-                    lg(o_)
-                    print("Sending Report.")
-                    if o_[0] == 0: puan = 0; net=0
-                    else:
-                        net = o_[0]+(-o_[1]-o_[2])*.25
-                        if o_[3] != 0:
-                            puan = o_[0]/o_[3]*100
-                        else: puan = 0
-                    tdy = datetime.datetime.now().strftime("%Y-%m-%d")
-                    tdy_stats = []
-                    with open("statistics.csv","r",encoding="UTF-8") as ff:
-                        lineies = ff.readlines()
-                        for lime in lineies[::-1]:
-                            if tdy in lime:
-                                tdy_stats.append(lime)
-                        ff.close()
-                    flb = {}
-                    for stat in tdy_stats:
-                        parts = stat.split(",")
-                        key = parts[1]
-                        is_success = parts[4] == "True"
+                m_ = []
+                with open("daily_stats.csv", "r", encoding="UTF-8") as fg:
+                    liness = fg.readlines()
+                    for line in liness[::-1]:
+                        if datetime.datetime.now().strftime("%Y-%m-%d") in line:
+                            m_.append(line)
+                    fg.close()
+                o_ = []
+                if len(m_) == 2:
+                    for i in range(1,5):
+                        ox = 0
+                        for x in m_:
+                            ox += int(x.split(",")[i])
+                        o_.append(ox)
+                else:
+                    for i in range(1,5):
+                        o_.append(int(m_[0].split(",")[i]))
+                lg(o_)
+                print("Sending Report.")
+                if o_[0] == 0: puan = 0; net=0
+                else:
+                    net = o_[0]+(-o_[1]-o_[2])*.25
+                    if o_[3] != 0:
+                        puan = o_[0]/o_[3]*100
+                    else: puan = 0
+                tdy = datetime.datetime.now().strftime("%Y-%m-%d")
+                tdy_stats = []
+                with open("statistics.csv","r",encoding="UTF-8") as ff:
+                    lineies = ff.readlines()
+                    for lime in lineies[::-1]:
+                        if tdy in lime:
+                            tdy_stats.append(lime)
+                    ff.close()
+                flb = {}
+                for stat in tdy_stats:
+                    parts = stat.split(",")
+                    key = parts[1]
+                    is_success = parts[4] == "True"
 
-                        current_true, current_total = flb.get(key, [0, 0])
+                    current_true, current_total = flb.get(key, [0, 0])
 
-                        new_true = current_true + 1 if is_success else current_true
-                        new_total = current_total + 1
-                        
-                        flb[key] = [new_true, new_total]
-                    for key,val in flb.items():
-                        if val[1] != 0:
-                            flb[key] = [val[0],val[1],(val[0]/val[1])*100]
-                        else:
-                            flb[key] = [val[0],val[1],0]
-                    flb = dict(sorted(flb.items(), key=lambda item: item[1][2], reverse=True))
-                    lb = ""
-                    """ print("hiaa")
-                    print(flb)
-                    print("hi")
-                    time.sleep(999) """
-                    for key, a in list(flb.items())[:20]:
-                        lb = f"{lb}{key} -> %{a[2]} ({a[0]}/{a[1]})\n"
-
-                    lb2 = ""
-                    for key, a in list(flb.items())[-20:]:
-                        lb2 = f"{lb2}{key} -> %{a[2]} ({a[0]}/{a[1]})\n"
+                    new_true = current_true + 1 if is_success else current_true
+                    new_total = current_total + 1
                     
+                    flb[key] = [new_true, new_total]
+                for key,val in flb.items():
+                    if val[1] != 0:
+                        flb[key] = [val[0],val[1],(val[0]/val[1])*100]
+                    else:
+                        flb[key] = [val[0],val[1],0]
+                flb = dict(sorted(flb.items(), key=lambda item: item[1][2], reverse=True))
+                lb = ""
+                """ print("hiaa")
+                print(flb)
+                print("hi")
+                time.sleep(999) """
+                for key, a in list(flb.items())[:20]:
+                    lb = f"{lb}{key} -> %{a[2]} ({a[0]}/{a[1]})\n"
+
+                lb2 = ""
+                for key, a in list(flb.items())[-20:]:
+                    lb2 = f"{lb2}{key} -> %{a[2]} ({a[0]}/{a[1]})\n"
+                if quiz_config.get("send_telegram_message"):
                     telegram_text = f"📅 Günlük Analiz 📅 ({datetime.datetime.now().strftime("%Y/%m/%d")})\n\nPuan : %{puan:.2f}\nNet : {net:.2f}\n\n✅ Doğru : {o_[0]}\n❌ Yanlış : {o_[1]}\n⚪ Boş : {o_[2]}\n📝 Total Soru Sayısı : {o_[3]}\n\n🏆 Top 20 : \n\n{lb}\n📉 Worst 20 : \n\n{lb2}"
                     try:
                         with open("sent_tg_messages.json","r",encoding="UTF-8") as x:
@@ -1189,15 +1194,36 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                                 h.close()
                     if DEBUG:
                         int(input(""))
+                if get_config("general")[0].get("set_time_for_pc"):
+                    lg("set_time_for_pc is true")
+                    ### Point, Minute Calculation and API posst to parental control ###
 
+                    ### Minute calculation
+                    minutes_to_add = o_[0]*60
+
+                    ### Give the user info ###
+                    cls()
+                    print(f"{o_[0]} Doğru yaptınız bugün için {minutes_to_add} dakika ekleniyor..")
+
+                    ### Send api post to parental control api to add exceptional time ###
+
+                    import parental_connection as pc
+                    base_url = os.getenv("PARENTAL_CONTROL_URL")
+                    ifn = pc.add_exceptional_time(base_url, "OVERALL", minutes_to_add)
+                    if "Queued" in ifn or "Success" in ifn: print("Dakikalarınız eklendi.")
+                    elif "Error" in ifn: print("Dakika eklenirken sorun oluştu!")
+                    else: print("Muhtemelen Dakikanız eklendi")
+                    
                 time.sleep(3)
                 cls()
                 dummy_main(quiz_config=quiz_config)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  
+    lg("Starting...")
+
     try:
-        if "--debug" in sys.argv:
+        if "-debug" in sys.argv:
             c_ = ASCII.ASCII_start_menu.main(debug=True)
         else:c_ = ASCII.ASCII_start_menu.main()
         cls()

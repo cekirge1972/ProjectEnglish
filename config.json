@@ -14,6 +14,7 @@
         "pronounce_words": false
     },
     "general": {
-        "spam_answer_proof": true
+        "spam_answer_proof": true,
+        "set_time_for_pc": true
     }
 }
