@@ -854,21 +854,21 @@ def main(quiz_config={}, legacy_start_menu=False,mode="play"):
                                 x.close()
                         except (json.JSONDecodeError, FileNotFoundError):
                             ddt = {}
-                        if telegram_text not in ddt:
+                        # Use today's date as key to avoid comparing long message strings
+                        date_key = datetime.datetime.now().strftime("%Y-%m-%d")
+                        if ddt.get(date_key) != telegram_text:
                             import telegram_report
                             try:
                                 telegram_report.send_telegram_report(telegram_text)
                                 with open("sent_tg_messages.json","w",encoding="UTF-8") as h:
-                                    ddt[datetime.datetime.now().strftime("%Y-%m-%d")] = telegram_text
+                                    ddt[date_key] = telegram_text
                                     json.dump(ddt,h,indent=4)
-                                    h.close()
-                            except:
+                            except Exception:
                                 time.sleep(60)
                                 telegram_report.send_telegram_report(telegram_text)
                                 with open("sent_tg_messages.json","w",encoding="UTF-8") as h:
-                                    ddt[datetime.datetime.now().strftime("%Y-%m-%d")] = telegram_text
+                                    ddt[date_key] = telegram_text
                                     json.dump(ddt,h,indent=4)
-                                    h.close()
                         if DEBUG:
                             int(input(""))
                         
@@ -1186,26 +1186,25 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                             x.close()
                     except (json.JSONDecodeError, FileNotFoundError):
                         ddt = {}
-                    if datetime.datetime.now().strftime("%Y-%m-%d") not in ddt:
+                    date_key = datetime.datetime.now().strftime("%Y-%m-%d")
+                    if ddt.get(date_key) != telegram_text:
                         import telegram_report
                         try:
                             telegram_report.send_telegram_report(telegram_text)
                             with open("sent_tg_messages.json","w",encoding="UTF-8") as h:
-                                ddt[datetime.datetime.now().strftime("%Y-%m-%d")] = telegram_text
+                                ddt[date_key] = telegram_text
                                 json.dump(ddt,h,indent=4)
-                                h.close()
-                        except:
+                        except Exception:
                             time.sleep(60)
                             telegram_report.send_telegram_report(telegram_text)
                             with open("sent_tg_messages.json","w",encoding="UTF-8") as h:
-                                ddt[datetime.datetime.now().strftime("%Y-%m-%d")] = telegram_text
+                                ddt[date_key] = telegram_text
                                 json.dump(ddt,h,indent=4)
-                                h.close()
                     if DEBUG:
                         int(input(""))
                 if get_config(["general"])[0].get("set_time_for_pc"):
-                    lg("set_time_for_pc is tru1e")
-                    ### Point, Minute Calculation and API posst to parental control ###
+                    lg("set_time_for_pc is true")
+                    ### Point, Minute Calculation and API post to parental control ###
 
                     ### Minute calculation
                     minutes_to_add = o_[0]*60
@@ -1228,7 +1227,7 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                     except:already_registered=False
                     if not already_registered:   
                         cls()
-                        print(f"{o_[0]} Doğru yaptınız {t} için {minutes_to_add//60} dakika ekleniyor..")
+                        print("Lütfen bekleyiniz...")
 
                         ### Send api post to parental control api to add exceptional time ###
                         from dotenv import load_dotenv
@@ -1238,18 +1237,33 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                         if base_url == None:
                             print("Hatalı .env dosyası! Dakika eklenemedi!!!")
                         else:
-                            ifn = pc.add_exceptional_time(base_url, "OVERALL", minutes_to_add,date,f"{o_[0]} Doğru yaptığınız için")
-                            if 1 == ifn or '"status":"queued"' in str(ifn):
-                                print("Dakikalarınız eklendi.")
-                                if not os.path.exists("used_exceptions.csv"):
-                                    with open("used_exceptions.csv","w",encoding="UTF-8") as f:f.close()
-                                with open("used_exceptions.csv","a",encoding="UTF-8") as file:
-                                    file.write(f"{date},{o_[0]},{minutes_to_add}\n")
-                                    file.close()
-                            elif "Error" in str(ifn): print("Dakika eklenirken sorun oluştu!");print(str(ifn))
-                            else: print("Muhtemelen Dakikanız eklendi")
-                            print(f"\n{telegram_text}\n")
-                            input("Ana menüye dönmek için herhangi bir butona basınız.")
+                            ### example structure of resulting var : {"data":[[600,null],[600,null]],"status":"success"}
+                            resulting = pc.get_exceptional_time(base_url, "OVERALL", date)
+                            total_time_available = 0
+                            for exception in resulting.get("data", []):
+                                if "COALIDE" in str(exception[1]):
+                                    total_time_available += int(exception[0])
+                            if minutes_to_add > total_time_available:
+                                minutes_to_add = minutes_to_add - total_time_available
+                            else:minutes_to_add = 0
+                            print(f"{o_[0]-minutes_to_add//60} Doğru yaptınız {t} için {minutes_to_add//60} dakika ekleniyor..")
+                            try:
+                                ifn = pc.add_exceptional_time(base_url, "OVERALL", minutes_to_add,date,f"{o_[0]} Doğru yaptığınız için - COALIDE")
+                                if "Connection Error" in str(ifn):raise Exception("Connection Error")
+                                if 1 == ifn or '"status":"queued"' in str(ifn):
+                                    print("Dakikalarınız eklendi.")
+                                    if not os.path.exists("used_exceptions.csv"):
+                                        with open("used_exceptions.csv","w",encoding="UTF-8") as f:f.close()
+                                    with open("used_exceptions.csv","a",encoding="UTF-8") as file:
+                                        file.write(f"{date},{o_[0]},{minutes_to_add}\n")
+                                        file.close()
+                                elif "Error" in str(ifn): print("Dakika eklenirken sorun oluştu!");print(str(ifn))
+                                else: print("Muhtemelen Dakikanız eklendi")
+                                print(f"\n{telegram_text}\n")
+                                input("Ana menüye dönmek için herhangi bir butona basınız.")
+                            except:
+                                print("İkincil API'ye istek gönderilirken bir hata oluştu! Dakika eklenemedi!!!")
+                            
                     else:
                         print("Zaten süreniz eklenmiş!")
                 time.sleep(3)

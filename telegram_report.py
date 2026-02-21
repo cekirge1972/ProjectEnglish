@@ -12,72 +12,76 @@ load_dotenv()
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 # 2. Get your Chat ID (user, group, or channel)
 CHAT_ID: str = os.getenv("CHAT_ID", "YOUR_CHAT_ID")
+import os
+import json
+from typing import Optional
+from dotenv import load_dotenv
+import requests
 
-# Telegram API base URL
-TELEGRAM_API_URL: str = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+# Load environment variables from .env file
+load_dotenv()
+
+# Configuration (from .env file)
+BOT_TOKEN: str = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+CHAT_ID: str = os.getenv("CHAT_ID", "YOUR_CHAT_ID")
+
 
 def send_telegram_report(
-    report_message: str, 
-    chat_id: str = CHAT_ID, 
-    parse_mode: Optional[str] = "HTML"
-) -> None:
-    """
-    Sends a pre-formatted report message to a specified Telegram chat.
+    report_message: str,
+    chat_id: Optional[str] = None,
+    parse_mode: Optional[str] = "HTML",
+    timeout: int = 10,
+) -> bool:
+    """Send a text message to a Telegram chat.
 
-    Args:
-        report_message (str): The content of the report, properly formatted 
-                              for the specified `parse_mode`.
-        chat_id (str): The destination chat ID (defaults to the global CHAT_ID).
-        parse_mode (Optional[str]): Formatting mode (e.g., "MarkdownV2", "HTML", or None). 
-                                    Defaults to "MarkdownV2".
+    Returns True on success, False on recoverable failure, and raises on
+    unexpected network errors.
     """
+    if chat_id is None:
+        chat_id = CHAT_ID
+
     if BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN" or chat_id == "YOUR_CHAT_ID":
         print("🛑 Configuration Error: Please set a valid BOT_TOKEN and CHAT_ID.")
-        return
+        return False
 
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,
         "text": report_message,
         "parse_mode": parse_mode,
-        "disable_web_page_preview": True # Optional: prevents link previews
+        "disable_web_page_preview": True,
     }
 
     try:
-        response = requests.post(TELEGRAM_API_URL, data=payload)
-        response.raise_for_status()  # Raise exception for 4xx/5xx HTTP errors
-        
-        result = response.json()
+        resp = requests.post(url, data=payload, timeout=timeout)
+        resp.raise_for_status()
+        result = resp.json()
         if result.get("ok"):
             print(f"✅ Report sent successfully to chat ID: {chat_id}")
+            return True
         else:
             print(f"❌ Telegram API Error: {result.get('description', 'Unknown API Error')}")
+            return False
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Network/Request Error during Telegram call: {e}")
-        raise {e}
-    except json.JSONDecodeError:
+        raise
+    except json.JSONDecodeError as e:
         print("❌ Failed to decode JSON response from Telegram.")
-        raise {e}
+        raise
 
 
-# --- Example Usage ---
 if __name__ == "__main__":
-    # Ensure your report is correctly formatted (e.g., MarkdownV2 requires 
-    # escaping special characters like '.', '(', ')' with a backslash '\')
-    
-    example_report = (
-        "*📈 Server Health Check Report 📈*\n"
-        "\n"
-        "*Service Name:* `Data\\_Ingestor\\_2\\.`\n"
-        "*Status:* *DOWN* 🔴\n"
-        "*Incident ID:* [INC\\-9002]\\(http://your\\.dashboard\\.com/inc\\-9002\\)\n"
-        "*Time:* `10:30:00 UTC`\n"
-        "\n"
-        "_Please review immediately\\._"
-    )
+    report_ = (
+        "<b>📈 Günlük Rapor! 📈</b>\n\n"
+        "Quiz Dosyası: <code>quiz_01-12-25_49-55.json</code>\n"
+        "Quiz Tipi: <code>Sıralı Test Quiz</code>\n"
+        "Toplam <code>{}</code> sorudan <code>{}</code> doğru yapıldı.\n"
+    ).format(100, 84)
 
-    report_ = f"<b>📈 Günlük Rapor! 📈</b>\n\nQuiz Dosyası: <code>quiz_01-12-25_49-55.json</code>\nQuiz Tipi: <code>Sıralı Test Quiz</code>\nToplam <code>{100} sorudan {84} soru doğru yapıldı.</code>\n\n"
-    
     print("--- Attempting to Send Report ---")
-    send_telegram_report(report_)
+    try:
+        send_telegram_report(report_)
+    except Exception:
+        print("Failed to send report in __main__ mode")
     print("----------------------------------")
