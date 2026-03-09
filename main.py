@@ -4,6 +4,7 @@ import json
 import random
 import datetime
 import shutil
+import subprocess
 import ASCII.Animations.video
 import ASCII.ASCII_LevelUp
 import ASCII.ASCII_selection_menu
@@ -21,6 +22,32 @@ if not os.path.exists(".env"):
     with open(".env","w",encoding="UTF-8") as f:
         f.write("ADMIN_PASSWORD=0000\nPARENTAL_CONTROL_URL=http://IP-TO-YOUR-PCV2-SERVER:5005")
         f.close()
+
+def restart_application():
+    """
+    Restarts the application using Windows subprocess.
+    Compatible with Windows systems.
+    """
+    import subprocess
+    try:
+        # Get the current Python executable and script path
+        python_executable = sys.executable
+        script_path = os.path.abspath(__file__)
+        
+        # Restart with the same arguments
+        args = [python_executable, script_path] + sys.argv[1:]
+        
+        # On Windows, use CREATE_NEW_CONSOLE to spawn in new window
+        if sys.platform.startswith('win'):
+            subprocess.Popen(args, creationflags=subprocess.CREATE_NEW_CONSOLE)
+        else:
+            subprocess.Popen(args)
+        
+        # Exit current process
+        sys.exit(0)
+    except Exception as e:
+        print(f"Failed to restart application: {e}")
+        sys.exit(1)
 
 def lg(a="",b="",c="",d="",e="",f="",g="",h="",i="",j="",k="",l="",m="",n="",o="",p="",q="",r="",s="",t="",u="",v="",w="",x="",y="",z=""):
     global DEBUG
@@ -1484,13 +1511,18 @@ def dummy_main(quiz_config={}, legacy_start_menu=False,mode="play"):
                         except:
                             print("İkincil API'ye istek gönderilirken bir hata oluştu! Dakika eklenemedi!!!")
                         print(f"\n{telegram_text}\n")
-                        input("Ana menüye dönmek için herhangi bir butona basınız.")
-                            
+                        s_time = time.time()
+                        while time.time() - s_time < 30:
+                            input(f"Ana menüye dönmek için herhangi bir butona basınız. ({int(time.time() - s_time)}/30 sn)")
+
                     else:
                         print("Zaten süreniz eklenmiş!")
                 time.sleep(3)
                 cls()
-                dummy_main(quiz_config=quiz_config)
+                ### Restarting the code to fix problems with memory ###
+                restart_application()
+                
+                """ dummy_main(quiz_config=quiz_config) """
 
 
 if __name__ == "__main__":  
@@ -1519,6 +1551,11 @@ if __name__ == "__main__":
             dummy_main(legacy_start_menu=leg,mode=c_)
     except KeyboardInterrupt:
         print("Exiting the application")
+    except Exception as e:
+        print(f"Application error occurred: {e}")
+        print("Restarting application in 5 seconds...")
+        time.sleep(5)
+        restart_application()
 
 
 
