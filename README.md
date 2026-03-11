@@ -334,7 +334,7 @@ Pull requests and issue reports are welcome. Please keep changes focused and des
 
 ## 📄 License
 
-This project is part of the Coalide learning system. No explicit license file is present in the repository.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
